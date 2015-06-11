@@ -1,0 +1,21 @@
+---
+title: "Reproducible Research Assignment1"
+author: "Maria Ruiz"
+date: "Thursday, June 11, 2015"
+output: html_document
+---
+
+Read data from file activity.csv
+
+```{r readdata}
+data <- read.csv("./repdata-data-activity/activity.csv")
+head(data)
+```
+
+Calculate total steps per day
+
+```{r total steps}
+
+
+```
+
