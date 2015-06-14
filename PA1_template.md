@@ -97,3 +97,8 @@ Total number of steps **mean** (includes estimation for missing values): 10765.6
 Total number of steps **median** (includes estimation for missing values): 10762
 
 The values of the mean and the median don't differ much from the first analysis (ignoring the missing values). That implies that the method to estimate the missing values is good.
+
+# Different patterns between weekdays and weekends
+
+
+
