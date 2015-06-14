@@ -1,25 +1,99 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
----
+# Reproducible Research Assignment1
+
+## Data
+
+Read data from file activity.csv
+
+```{r readdata}
+data <- read.csv("./repdata-data-activity/activity.csv", stringsAsFactors = FALSE)
+head(data)
+```
+
+## Calculate total steps per day
+
+Calculate the total steps per day and show the results on a histogram. 
+
+```{r total steps, results='markup', message = FALSE}
+library(dplyr)
+
+totstepsdata <- data %>% 
+    na.omit() %>% 
+    group_by(date) %>% 
+    summarize(totsteps = sum(steps))
+
+hist(totstepsdata$totsteps, main = "Total steps taken per day October/November 2012", 
+     ylim = c(0, 20), 
+     xlim = c(0, 25000), xlab = "Total steps per day", col = "darkgreen",
+     breaks = 11)
+```
+
+```{r meanandmedian, echo=FALSE}
+totstepsmean <- as.character(round(mean(totstepsdata$totsteps), 2))
+totstepsmedian <- as.character(median(totstepsdata$totsteps))
+```
+
+Total number of steps **mean**: `r totstepsmean`
+
+Total number of steps **median**: `r totstepsmedian`
+
+# Average daily activity plan
+
+```{r dailyplan, echo=FALSE, message=FALSE}
+library(ggplot2)
+
+averagedailydata <- data %>% 
+    na.omit() %>% 
+    group_by(interval) %>% 
+    summarize(avractivity = mean(steps))
+
+qplot(data = averagedailydata, interval, avractivity, color = avractivity, geom="line") +
+    scale_y_continuous("Average steps", limits=c(0,225),breaks=seq(0, 225, 50)) + 
+    scale_colour_continuous(guide = FALSE) +
+    scale_x_continuous("5 minute interval", limits=c(0,2400),breaks=seq(0, 2400, 300))
+```
+```{r maximumaverage}
+maxavr <- averagedailydata[averagedailydata$avractivity == max(averagedailydata$avractivity), "interval"]
+```
+
+5 minutes interval with **maximum** average steps across all days: `r round(maxavr/100, 0)` hours and `r maxavr%%100` minutes
+
+# Missing values
 
 
-## Loading and preprocessing the data
+The total number of missing values in the dataset is `r sum(is.na(data))`.
 
+In order to fill in the missing values in the dataset (only applies to the steps variable) we will use
+the average number of steps across all days for the same time interval.
 
+```{r missingval}
+missingdata <- data %>%
+    merge(averagedailydata) %>%
+    mutate(steps = ifelse(is.na(steps), round(avractivity, 0), steps)) %>%
+    select(-avractivity) %>%
+    arrange(date, interval)
+```
 
-## What is mean total number of steps taken per day?
+```{r histogram2}
 
+totstepsdata <- missingdata %>% 
+    na.omit() %>% 
+    group_by(date) %>% 
+    summarize(totsteps = sum(steps))
 
+hist(totstepsdata$totsteps, 
+     main = "Total steps taken per day October/November 2012\n(includes estimatation of missing values)", 
+     ylim = c(0, 25), 
+     xlim = c(0, 25000), xlab = "Total steps per day", col = "lightgreen",
+     breaks = 11)
+```
 
-## What is the average daily activity pattern?
+```{r meanandmedian2, echo=FALSE}
+totstepsmean <- as.character(round(mean(totstepsdata$totsteps), 2))
+totstepsmedian <- as.character(median(totstepsdata$totsteps))
+```
 
+Total number of steps **mean** (includes estimation for missing values): `r totstepsmean`
 
+Total number of steps **median** (includes estimation for missing values): `r totstepsmedian`
 
-## Imputing missing values
-
-
-
-## Are there differences in activity patterns between weekdays and weekends?
+The values of the mean and the median don't differ much from the first analysis (ignoring the missing values). That implies that the method to estimate the missing values is good.
