@@ -97,3 +97,14 @@ Total number of steps **mean** (includes estimation for missing values): `r tots
 Total number of steps **median** (includes estimation for missing values): `r totstepsmedian`
 
 The values of the mean and the median don't differ much from the first analysis (ignoring the missing values). That implies that the method to estimate the missing values is good.
+
+# Different patterns between weekdays and weekends
+
+```{r weekdays, echo=FALSE, message=FALSE}
+library(lubridate)
+
+weekdata <- mutate(data, 
+    weekday = ifelse(weekdays(ymd(date)) == 'Sunday' | weekdays(ymd(date)) == 'Saturday', 0, 1))
+weekdata$weekday <- factor(weekdata$weekday)
+```
+
