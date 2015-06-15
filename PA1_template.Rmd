@@ -1,5 +1,6 @@
 # Reproducible Research Assignment1
 
+
 ## Data
 
 Read data from file activity.csv
@@ -8,6 +9,7 @@ Read data from file activity.csv
 data <- read.csv("./repdata-data-activity/activity.csv", stringsAsFactors = FALSE)
 head(data)
 ```
+
 
 ## Calculate total steps per day
 
@@ -36,34 +38,40 @@ Total number of steps **mean**: `r totstepsmean`
 
 Total number of steps **median**: `r totstepsmedian`
 
-# Average daily activity plan
 
-```{r dailyplan, echo=FALSE, message=FALSE}
+## Average daily activity pattern
+
+Calculate the average number of steps taken, averaged across all days.
+
+```{r dailypattern, message=FALSE}
 library(ggplot2)
 
 averagedailydata <- data %>% 
     na.omit() %>% 
     group_by(interval) %>% 
     summarize(avractivity = mean(steps))
+```
 
+Create a time series plot.
+
+```{r dailypatternplot}
 qplot(data = averagedailydata, interval, avractivity, color = avractivity, geom="line") +
     scale_y_continuous("Average steps", limits=c(0,225),breaks=seq(0, 225, 50)) + 
     scale_colour_continuous(guide = FALSE) +
     scale_x_continuous("5 minute interval", limits=c(0,2400),breaks=seq(0, 2400, 300))
 ```
-```{r maximumaverage}
+```{r maximumaverage, echo=FALSE}
 maxavr <- averagedailydata[averagedailydata$avractivity == max(averagedailydata$avractivity), "interval"]
 ```
 
 5 minutes interval with **maximum** average steps across all days: `r round(maxavr/100, 0)` hours and `r maxavr%%100` minutes
 
-# Missing values
 
+## Missing values
 
 The total number of missing values in the dataset is `r sum(is.na(data))`.
 
-In order to fill in the missing values in the dataset (only applies to the steps variable) we will use
-the average number of steps across all days for the same time interval.
+In order to fill in the missing values in the dataset (only applies to the steps variable) we will use the average number of steps across all days for the same time interval.
 
 ```{r missingval}
 missingdata <- data %>%
@@ -72,6 +80,8 @@ missingdata <- data %>%
     select(-avractivity) %>%
     arrange(date, interval)
 ```
+
+Create a histogram.
 
 ```{r histogram2}
 
@@ -98,13 +108,38 @@ Total number of steps **median** (includes estimation for missing values): `r to
 
 The values of the mean and the median don't differ much from the first analysis (ignoring the missing values). That implies that the method to estimate the missing values is good.
 
-# Different patterns between weekdays and weekends
 
-```{r weekdays, echo=FALSE, message=FALSE}
+## Different patterns between weekdays and weekends
+
+```{r weekdays, message=FALSE}
 library(lubridate)
 
 weekdata <- mutate(data, 
-    weekday = ifelse(weekdays(ymd(date)) == 'Sunday' | weekdays(ymd(date)) == 'Saturday', 0, 1))
+    weekday = ifelse(weekdays(ymd(date)) == 'Sunday' | weekdays(ymd(date)) == 'Saturday', "weekend", "weekday"))
+
 weekdata$weekday <- factor(weekdata$weekday)
+
+weekdata <- weekdata %>% 
+    na.omit() %>%
+    group_by(interval, weekday) %>% 
+    summarize(avrsteps = round(mean(steps), 0))
 ```
 
+Create the panel plot containing a time series plot of the 5 minute interval and the
+average number of steps taken, averaged across all weekday days or weekend days
+
+```{r weekdaysplot}
+ggplot(data=weekdata, aes(interval, avrsteps)) + 
+    geom_line(aes(colour = avrsteps)) +  
+    scale_fill_hue(name ="weekday", h=c(0, 90)) +
+    theme_bw() +
+    theme(text = element_text(size=14, face = "bold")) +
+    facet_grid(weekday ~ .)  +
+    scale_colour_continuous(guide = FALSE) +
+    scale_y_continuous("average steps", limits=c(0,250),breaks=seq(0, 250, 50)) + 
+    scale_x_continuous("5 minute interval", limits=c(0,2400),breaks=seq(0, 2400, 300)) + 
+    ggtitle("Average steps in 5 minute interval")
+```
+
+In the plot we can appreciate how during the weekday days there is a peak before 
+9 am however during the weekend this doesn't happen.
